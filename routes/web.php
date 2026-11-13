@@ -9,6 +9,7 @@ use App\Http\Controllers\Dashboard\ProfileController as DashboardProfileControll
 use App\Http\Controllers\Dashboard\ResultController;
 use App\Http\Controllers\Dashboard\TestimonialController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeployController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Route;
 
 // Landing institucional da PersonalBio
 Route::get('/', [PageController::class, 'home'])->name('home');
+
+// Migrations pós-deploy (chamado pelo GitHub Actions, protegido por DEPLOY_TOKEN)
+Route::post('/_deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:5,1');
 
 // Autenticação (visitantes)
 Route::middleware('guest')->group(function () {

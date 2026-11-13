@@ -1,0 +1,185 @@
+name: 🚀 CI/CD (Testes + Deploy)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Nunca dois deploys ao mesmo tempo
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  # Pastas no servidor (relativas à raiz do FTP)
+  BACKEND_DIR: eu-persona
+  DOCROOT_DIR: personalbio.websiteponto.com.br
+  SITE_URL: https://personalbio.websiteponto.com.br
+
+jobs:
+  # ----------------------------------------------------------------
+  # CI: roda os testes em todo push e pull request
+  # ----------------------------------------------------------------
+  tests:
+    name: 🧪 Testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, gd
+
+      - name: 📦 Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # As views usam @vite, então o manifest precisa existir para os testes
+      - name: 🎨 Build Frontend Assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: 🧪 Run Tests
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
+
+  # ----------------------------------------------------------------
+  # CD: só depois dos testes passarem, e só na main
+  # ----------------------------------------------------------------
+  deploy:
+    name: 🎉 Deploy Production
+    needs: tests
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ env.SITE_URL }}
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_mysql, gd
+
+      - name: 📦 Install Composer Dependencies (produção)
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: 🎨 Build Frontend Assets
+        run: |
+          npm ci
+          npm run build
+
+      # O webroot do domínio fica numa pasta separada do Laravel. O index.php
+      # gerado aqui carrega o Laravel de ../$BACKEND_DIR e define o webroot como
+      # pasta pública: assim o build do Vite e as fotos enviadas (uploads/) ficam
+      # no lugar que o Apache serve.
+      - name: 🧩 Prepare webroot
+        run: |
+          mkdir dist-public
+          cp -r public/. dist-public/
+          rm -rf dist-public/uploads dist-public/hot
+          cat > dist-public/index.php <<'PHP'
+          <?php
+
+          use Illuminate\Http\Request;
+
+          define('LARAVEL_START', microtime(true));
+
+          $base = __DIR__.'/../__BACKEND_DIR__';
+
+          if (file_exists($maintenance = $base.'/storage/framework/maintenance.php')) {
+              require $maintenance;
+          }
+
+          require $base.'/vendor/autoload.php';
+
+          $app = require_once $base.'/bootstrap/app.php';
+          $app->usePublicPath(__DIR__);
+
+          $app->handleRequest(Request::capture());
+          PHP
+          sed -i "s/__BACKEND_DIR__/${BACKEND_DIR}/" dist-public/index.php
+          cat dist-public/index.php
+
+      # ----------------------------------------------------------------
+      # PARTE 1: Envia o BACKEND (app, vendor, config...)
+      # ----------------------------------------------------------------
+      - name: 📂 Deploy Backend (App Core)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /${{ env.BACKEND_DIR }}/
+          state-name: backend-sync-state.json
+          timeout: 120000
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/tests/**
+            **/node_modules/**
+            **/public/**
+            dist-public/**
+            design-source/**
+            **/storage/*.key
+            **/.env
+            **/README.md
+
+      # ----------------------------------------------------------------
+      # PARTE 2: Envia o WEBROOT (index.php, build do Vite, imagens)
+      # ----------------------------------------------------------------
+      - name: 📂 Deploy Webroot (Public Folder)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dist-public/
+          server-dir: /${{ env.DOCROOT_DIR }}/
+          state-name: frontend-sync-state.json
+          timeout: 120000
+          # Nunca mexer nas fotos enviadas pelos usuários
+          exclude: |
+            uploads/**
+            **/.gitkeep
+
+      # ----------------------------------------------------------------
+      # PARTE 3: Migrations + limpeza de cache (endpoint protegido)
+      # ----------------------------------------------------------------
+      - name: 🗄️ Run Database Migrations
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          curl -fsS --retry 2 -X POST \
+            -H "X-Deploy-Token: ${DEPLOY_TOKEN}" \
+            "${SITE_URL}/_deploy/migrate"
+
+      - name: ✅ Health check
+        run: curl -fsS -o /dev/null -w "HTTP %{http_code}\n" "${SITE_URL}/up"

@@ -1,58 +1,78 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PersonalBio
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Site profissional para personal trainers, pronto em minutos.
 
-## About Laravel
+Muito personal bom perde aluno porque a única vitrine que tem é o Instagram: as fotos de antes e depois se perdem no feed, as certificações ficam num destaque esquecido e quem quer contratar precisa mandar DM e esperar. A PersonalBio dá a cada personal uma página própria que mostra o trabalho de um jeito sério e transforma visita em contato no WhatsApp.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Ao vivo em [personalbio.websiteponto.com.br](https://personalbio.websiteponto.com.br).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Como funciona
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+O personal cria a conta, preenche o perfil pelo painel e ganha dois endereços:
 
-## Learning Laravel
+- **`/seu-nome`**: o site completo, com apresentação, formação e certificações, resultados de alunos (antes e depois), pacotes e preços, depoimentos e formulário de contato.
+- **`/seu-nome/bio`**: uma versão enxuta para colocar no link da bio do Instagram, com os links que ele quiser.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Quando um aluno em potencial preenche o formulário, ele responde uma pequena anamnese (objetivo, nível, frequência, onde treina e restrições). O contato fica salvo no painel, o personal recebe um e-mail e o aluno é levado direto para o WhatsApp do personal, já com a mensagem pronta.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+No painel, o personal escolhe as cores e o fundo da página, sobe as fotos, organiza os pacotes e acompanha os contatos que chegaram.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Planos
 
-## Agentic Development
+| | Grátis | Pro | Studio |
+| --- | --- | --- | --- |
+| Preço | R$ 0 | R$ 39/mês | R$ 129/mês |
+| Resultados, links e pacotes | até 2, 2 e 1 | ilimitados | ilimitados |
+| Depoimentos | 2 | 5 | ilimitados |
+| Logo próprio e sem "Feito com PersonalBio" | não | sim | sim |
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+A assinatura do Pro é feita pelo Mercado Pago (assinatura recorrente). O webhook do Mercado Pago ativa ou rebaixa o plano automaticamente quando o pagamento é aprovado, pausado ou cancelado. Os limites e o que cada plano libera ficam em [config/plans.php](config/plans.php).
+
+## Rodando na sua máquina
+
+Precisa de PHP 8.3+, Composer, Node 22 e MySQL (ou SQLite, para testar rápido).
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm run build
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+O seed cria dois perfis de exemplo, `/marina-lacerda` e `/bruno-tavares`, que aparecem na home na seção "Veja na prática", e uma conta para entrar no painel: `demo@corpora.test` com a senha `password`. Não rode o seed em produção sem trocar essa senha.
 
-## Contributing
+Para a assinatura funcionar, configure no `.env`:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+MP_ACCESS_TOKEN=
+MP_PUBLIC_KEY=
+MP_PRO_PRICE=39
+```
 
-## Code of Conduct
+## Testes
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan test
+```
 
-## Security Vulnerabilities
+## Deploy
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+O deploy é feito pelo GitHub Actions a cada push na `main` ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)):
 
-## License
+1. Roda os testes. Se algum falhar, nada vai para o servidor.
+2. Instala as dependências de produção e builda os assets.
+3. Envia o Laravel por FTP para `/eu-persona` e a pasta pública para `/personalbio.websiteponto.com.br`.
+4. Chama `/_deploy/migrate`, que roda as migrations no servidor. Essa rota só responde a quem envia o `DEPLOY_TOKEN` certo.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+O `index.php` da pasta do domínio é gerado no deploy e carrega o Laravel da pasta `/eu-persona`. As fotos que os personais enviam ficam em `uploads/`, dentro da pasta do domínio, e o deploy nunca mexe nelas.
+
+Secrets necessários no repositório: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` e `DEPLOY_TOKEN`. O mesmo `DEPLOY_TOKEN` precisa estar no `.env` do servidor.
+
+## Stack
+
+Laravel 13, Blade, Tailwind CSS 4 e Vite. Pagamentos pelo Mercado Pago.
+
+A pasta `design-source/` guarda os protótipos em HTML que serviram de base para o visual (o projeto se chamava Corpora no começo).
