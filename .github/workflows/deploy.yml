@@ -162,9 +162,11 @@ jobs:
       - name: 🗄️ Install release + migrations
         env:
           DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        # O Mod_Security da hospedagem responde 406 a POST sem corpo; o "-d" evita isso.
         run: |
-          curl -sS --fail-with-body --max-time 600 -X POST \
+          curl -sS --fail-with-body --max-time 600 \
             -H "X-Deploy-Token: ${DEPLOY_TOKEN}" \
+            -d "deploy=1" \
             "${SITE_URL}/_deploy.php"
 
       - name: ✅ Health check
