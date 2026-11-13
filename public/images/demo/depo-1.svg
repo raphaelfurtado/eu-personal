@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="760" viewBox="0 0 380 760" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect width="380" height="760" fill="#e9e2d9"/>
+  <!-- header -->
+  <rect width="380" height="68" fill="#128c7e"/>
+  <path d="M22 34l12-11v22z" fill="#fff"/>
+  <circle cx="58" cy="34" r="17" fill="#ffffff" opacity="0.35"/>
+  <text x="86" y="30" fill="#ffffff" font-size="16" font-weight="700">Renato T. · aluno</text>
+  <text x="86" y="48" fill="#cdeee7" font-size="12">online</text>
+  <!-- incoming bubble -->
+  <g>
+    <rect x="18" y="92" width="250" height="58" rx="12" fill="#ffffff"/>
+    <text x="34" y="120" fill="#1b2520" font-size="14">Bom dia, Marina! Vou te</text>
+    <text x="34" y="138" fill="#1b2520" font-size="14">mandar um feedback 👇</text>
+  </g>
+  <!-- incoming bubble (long testimonial) -->
+  <g>
+    <rect x="18" y="162" width="300" height="186" rx="12" fill="#ffffff"/>
+    <text x="34" y="190" fill="#1b2520" font-size="14">Você é uma profissional muito</text>
+    <text x="34" y="210" fill="#1b2520" font-size="14">comprometida e pontual. Montou</text>
+    <text x="34" y="230" fill="#1b2520" font-size="14">um treino personalizado pras minhas</text>
+    <text x="34" y="250" fill="#1b2520" font-size="14">necessidades, sempre corrigindo a</text>
+    <text x="34" y="270" fill="#1b2520" font-size="14">postura e os movimentos.</text>
+    <text x="34" y="296" fill="#1b2520" font-size="14">Foco total no aluno do início ao fim.</text>
+    <text x="34" y="322" fill="#1b2520" font-size="15" font-weight="700">Recomendo demais! 🙏💪</text>
+    <text x="288" y="340" fill="#8a9690" font-size="11">10:58</text>
+  </g>
+  <!-- outgoing bubble -->
+  <g>
+    <rect x="120" y="360" width="242" height="56" rx="12" fill="#dcf8c6"/>
+    <text x="136" y="388" fill="#1b2520" font-size="14">Que alegria, Renato! 🥹 Bora</text>
+    <text x="136" y="406" fill="#1b2520" font-size="14">pra cima que vem mais! 🚀</text>
+    <text x="332" y="408" fill="#7da98c" font-size="11">11:02</text>
+  </g>
+</svg>
