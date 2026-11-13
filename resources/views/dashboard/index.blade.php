@@ -2,10 +2,10 @@
     <div style="margin-bottom:30px;">
         <h1 style="font:700 clamp(28px,4vw,38px)/1.05 'Oswald',sans-serif;color:#1b2520;margin:0 0 8px;">Olá, {{ explode(' ', $trainer->name)[0] }} 👋</h1>
         <p style="font:400 16px/1.5 'Inter',sans-serif;color:#6b7670;margin:0;">Seu perfil está no ar em
-            <a href="{{ route('profile', $trainer) }}" target="_blank" rel="noopener" style="color:#1f4733;font-weight:600;">personalbio.com.br/{{ $trainer->slug }}</a>.
+            <a href="{{ route('profile', $trainer) }}" target="_blank" rel="noopener" style="color:#1f4733;font-weight:600;">{{ config('app.domain') }}/{{ $trainer->slug }}</a>.
         </p>
         <p style="font:400 15px/1.5 'Inter',sans-serif;color:#6b7670;margin:8px 0 0;">Versão enxuta pra bio do Instagram:
-            <a href="{{ route('profile.bio', $trainer) }}" target="_blank" rel="noopener" style="color:#1f4733;font-weight:600;">personalbio.com.br/{{ $trainer->slug }}/bio</a>.
+            <a href="{{ route('profile.bio', $trainer) }}" target="_blank" rel="noopener" style="color:#1f4733;font-weight:600;">{{ config('app.domain') }}/{{ $trainer->slug }}/bio</a>.
         </p>
     </div>
 

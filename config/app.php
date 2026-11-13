@@ -55,6 +55,12 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     /*
+    | Domínio exibido nos textos (ex.: "personalbio.websiteponto.com.br/seu-nome").
+    | Vem do host do APP_URL; APP_DOMAIN sobrescreve se um dia for diferente.
+    */
+    'domain' => env('APP_DOMAIN') ?: parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------

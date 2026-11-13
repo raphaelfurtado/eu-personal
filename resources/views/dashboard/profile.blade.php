@@ -83,8 +83,8 @@
             <div style="margin-bottom:16px;">
                 <label style="{{ $labelSt }}">Seu link (endereço do seu site)</label>
                 <div style="display:flex;align-items:stretch;border:1.5px solid #e0ddd3;border-radius:11px;overflow:hidden;background:#faf9f5;">
-                    <span style="display:flex;align-items:center;padding:0 12px;background:#efece3;color:#8a9690;font:600 14px/1 'Inter',sans-serif;white-space:nowrap;">personalbio.com.br/</span>
-                    <input name="slug" value="{{ old('slug', $trainer->slug) }}" required style="flex:1;border:none;background:#faf9f5;padding:13px 14px;font:400 15px 'Inter',sans-serif;color:#1b2520;outline:none;">
+                    <span style="display:flex;align-items:center;padding:0 12px;background:#efece3;color:#8a9690;font:600 14px/1 'Inter',sans-serif;white-space:nowrap;min-width:0;max-width:60%;overflow:hidden;text-overflow:ellipsis;" title="{{ config('app.domain') }}/">{{ config('app.domain') }}/</span>
+                    <input name="slug" value="{{ old('slug', $trainer->slug) }}" required style="flex:1;min-width:120px;border:none;background:#faf9f5;padding:13px 14px;font:400 15px 'Inter',sans-serif;color:#1b2520;outline:none;">
                 </div>
                 <div style="font:400 12px/1.4 'Inter',sans-serif;color:#8a9690;margin-top:6px;">Use letras minúsculas, números e hífen. Precisa ser único — se já existir, escolha outro (ex.: <em>raphael-furtado-rj</em>).</div>
                 @error('slug')<div style="font:400 12px 'Inter',sans-serif;color:#c0392b;margin-top:6px;">{{ $message }}</div>@enderror

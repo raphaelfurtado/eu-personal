@@ -90,8 +90,8 @@ class ExampleProfilesSeeder extends Seeder
         $marina->links()->createMany([
             ['icon' => 'whatsapp',  'label' => 'Fale comigo no WhatsApp',     'url' => 'https://wa.me/5511999990000',                'sort' => 1],
             ['icon' => 'instagram', 'label' => 'Me siga no Instagram',        'url' => 'https://instagram.com/marina.lacerda.treina','sort' => 2],
-            ['icon' => 'play',      'label' => 'Treino online (assinatura)',  'url' => 'https://personalbio.com.br/marina-lacerda',      'sort' => 3],
-            ['icon' => 'bag',       'label' => 'Minhas planilhas de treino',  'url' => 'https://personalbio.com.br/marina-lacerda',      'sort' => 4],
+            ['icon' => 'play',      'label' => 'Treino online (assinatura)',  'url' => rtrim(config('app.url'), '/').'/marina-lacerda', 'sort' => 3],
+            ['icon' => 'bag',       'label' => 'Minhas planilhas de treino',  'url' => rtrim(config('app.url'), '/').'/marina-lacerda', 'sort' => 4],
         ]);
 
         $marina->packages()->delete();

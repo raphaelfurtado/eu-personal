@@ -46,7 +46,7 @@
                     <span style="width:11px;height:11px;border-radius:50%;background:#e06c5e;"></span>
                     <span style="width:11px;height:11px;border-radius:50%;background:#e6b54a;"></span>
                     <span style="width:11px;height:11px;border-radius:50%;background:#5bb87a;"></span>
-                    <span style="margin-left:12px;flex:1;background:#fff;border:1px solid #e7e5dd;border-radius:7px;padding:5px 12px;font:400 12px 'Inter',sans-serif;color:#8a9690;">personalbio.com.br/camila-reis</span>
+                    <span style="margin-left:12px;flex:1;background:#fff;border:1px solid #e7e5dd;border-radius:7px;padding:5px 12px;font:400 12px 'Inter',sans-serif;color:#8a9690;">{{ config('app.domain') }}/camila-reis</span>
                 </div>
                 <div>
                     <div style="background:#1f4733;color:#cfe0d5;text-align:center;padding:6px;font:600 10px/1 'Oswald',sans-serif;letter-spacing:.5px;text-transform:uppercase;">Perfil verificado em PersonalBio</div>
