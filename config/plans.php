@@ -17,10 +17,10 @@ return [
     'free' => [
         'price' => 'R$0',
         'limits' => [
-            'results'      => 2,
-            'links'        => 2,
+            'results'      => 1,
+            'links'        => 1,
             'packages'     => 1,
-            'testimonials' => 2,
+            'testimonials' => 1,
         ],
         'features' => [
             'remove_branding' => false,  // mostra "Feito com PersonalBio"

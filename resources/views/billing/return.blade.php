@@ -5,7 +5,7 @@
                 <x-icon name="check" size="38" sw="2.4" />
             </span>
             <h1 style="font:700 clamp(26px,4vw,34px)/1.05 'Oswald',sans-serif;color:#1b2520;margin:0 0 12px;">Assinatura confirmada! 🎉</h1>
-            <p style="font:400 16px/1.6 'Inter',sans-serif;color:#6b7670;margin:0 auto 28px;max-width:42ch;">Seu plano <strong style="color:#1f4733;">Pro</strong> está ativo. A marca PersonalBio saiu do seu site, o logo próprio foi liberado e os limites viraram ilimitados.</p>
+            <p style="font:400 16px/1.6 'Inter',sans-serif;color:#6b7670;margin:0 auto 28px;max-width:42ch;">Seu plano <strong style="color:#1f4733;">Pro</strong> está ativo. A marca PersonalBio saiu do seu site, o logo próprio foi liberado e agora você tem resultados, links e pacotes ilimitados, além de até {{ config('plans.pro.limits.testimonials') }} depoimentos.</p>
             <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
                 <a href="{{ route('dashboard.index') }}" style="padding:14px 26px;background:#1f4733;color:#fff;border-radius:999px;font:600 13px/1 'Oswald',sans-serif;letter-spacing:.8px;text-transform:uppercase;text-decoration:none;">Ir para o painel</a>
                 <a href="{{ route('profile', auth()->user()->trainer) }}" target="_blank" rel="noopener" style="padding:14px 26px;background:transparent;color:#1f4733;border:1.6px solid #cdd6cf;border-radius:999px;font:600 13px/1 'Oswald',sans-serif;letter-spacing:.8px;text-transform:uppercase;text-decoration:none;">Ver meu site</a>

@@ -192,10 +192,11 @@
                     $feats = $p['features'];
                     if (($p['plan'] ?? null) === 'free') {
                         $l = config('plans.free.limits');
+                        $n = fn ($qtd, $um, $varios) => $qtd.' '.($qtd == 1 ? $um : $varios);
                         $feats = array_merge($feats, [
-                            "Até {$l['results']} transformações (antes/depois)",
-                            "Até {$l['links']} links e {$l['packages']} pacote",
-                            "Até {$l['testimonials']} prints de alunos",
+                            'Até '.$n($l['results'], 'transformação', 'transformações').' (antes/depois)',
+                            'Até '.$n($l['links'], 'link', 'links').' e '.$n($l['packages'], 'pacote', 'pacotes'),
+                            'Até '.$n($l['testimonials'], 'print', 'prints').' de alunos',
                         ]);
                     }
                     // CTA: Studio fala com vendas (WhatsApp); os demais vão pro cadastro
