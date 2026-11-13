@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Cache;
+use App\Models\Trainer;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Assinaturas do Mercado Pago via PLANO (preapproval_plan).
- * O personal é levado ao init_point do plano (checkout hospedado: cartão de crédito);
- * o MP avisa por webhook e o retorno (back_url) confirma e libera o Pro.
+ * Assinaturas do Mercado Pago "com pagamento autorizado" (sem plano associado).
+ *
+ * O cartão é tokenizado no navegador pelo Card Payment Brick (os dados do cartão
+ * nunca passam pelo nosso servidor) e aqui criamos o preapproval já "authorized".
+ * O assinante NÃO precisa ter conta no Mercado Pago. O MP cobra todo mês sozinho
+ * e avisa mudanças de status pelo webhook (tópico subscription_preapproval).
  */
 class MercadoPago
 {
@@ -17,47 +20,95 @@ class MercadoPago
 
     public function configured(): bool
     {
-        return ! empty(config('services.mercadopago.token'));
+        return ! empty(config('services.mercadopago.token'))
+            && ! empty(config('services.mercadopago.public_key'));
     }
 
-    /** Link de checkout do plano Pro (cria o plano uma vez e reaproveita). */
-    public function proPlanInitPoint(): ?string
+    public function proPrice(): float
     {
-        $price = (float) config('services.mercadopago.pro_price', 39);
-        $key = 'mp_pro_plan_initpoint_cconly_'.(int) $price;  // só cartão (sem boleto)
+        return (float) config('services.mercadopago.pro_price', 39);
+    }
 
-        if ($cached = Cache::get($key)) {
-            return $cached;
+    /**
+     * E-mail do pagador enviado ao MP. Em teste o MP exige que o pagador seja um
+     * usuário de teste, então MP_TEST_PAYER_EMAIL substitui o e-mail da conta
+     * (nunca em produção).
+     */
+    public function payerEmail(Trainer $trainer): string
+    {
+        $test = config('services.mercadopago.test_payer');
+
+        if ($test && ! app()->isProduction()) {
+            return $test;
         }
 
+        return $trainer->user->email;
+    }
+
+    public static function externalReference(Trainer $trainer): string
+    {
+        return 'trainer-'.$trainer->id;
+    }
+
+    /** Id do personal a partir do external_reference ("trainer-12" → 12). */
+    public static function trainerIdFromReference(?string $ref): ?int
+    {
+        return $ref && preg_match('/^trainer-(\d+)$/', $ref, $m) ? (int) $m[1] : null;
+    }
+
+    /**
+     * Cria a assinatura mensal do Pro com o cartão tokenizado.
+     *
+     * @return array{ok: bool, id?: string, status?: string, error?: string}
+     */
+    public function createSubscription(Trainer $trainer, string $cardToken): array
+    {
         $resp = Http::withToken(config('services.mercadopago.token'))
             ->acceptJson()
-            ->post($this->base.'/preapproval_plan', [
-                'reason'         => 'PersonalBio Pro',
-                'back_url'       => route('billing.return'),
-                'auto_recurring' => [
+            ->post($this->base.'/preapproval', [
+                'reason'             => 'PersonalBio Pro',
+                'external_reference' => self::externalReference($trainer),
+                'payer_email'        => $this->payerEmail($trainer),
+                'card_token_id'      => $cardToken,
+                'back_url'           => route('billing.return'),
+                'status'             => 'authorized',
+                'auto_recurring'     => [
                     'frequency'          => 1,
                     'frequency_type'     => 'months',
-                    'transaction_amount' => $price,
+                    'transaction_amount' => $this->proPrice(),
                     'currency_id'        => 'BRL',
-                ],
-                // nível raiz: só cartão de crédito (remove boleto do checkout da assinatura)
-                'payment_methods_allowed' => [
-                    'payment_types'   => [['id' => 'credit_card']],
-                    'payment_methods' => [],
                 ],
             ]);
 
-        if (! $resp->successful() || empty($resp->json()['init_point'])) {
-            Log::warning('MercadoPago: falha ao criar plano', ['status' => $resp->status(), 'body' => $resp->json()]);
+        if (! $resp->successful() || empty($resp->json('id'))) {
+            Log::warning('MercadoPago: falha ao criar assinatura', [
+                'trainer' => $trainer->id,
+                'status'  => $resp->status(),
+                'body'    => $resp->json(),
+            ]);
 
-            return null;
+            return ['ok' => false, 'error' => (string) ($resp->json('message') ?? 'erro desconhecido')];
         }
 
-        $initPoint = $resp->json()['init_point'];
-        Cache::forever($key, $initPoint);
+        return ['ok' => true, 'id' => (string) $resp->json('id'), 'status' => (string) $resp->json('status')];
+    }
 
-        return $initPoint;
+    /** Cancela a assinatura no MP (para de cobrar). */
+    public function cancelSubscription(string $id): bool
+    {
+        $resp = Http::withToken(config('services.mercadopago.token'))
+            ->acceptJson()
+            ->put($this->base.'/preapproval/'.$id, ['status' => 'cancelled']);
+
+        if (! $resp->successful()) {
+            Log::warning('MercadoPago: falha ao cancelar assinatura', [
+                'id'     => $id,
+                'status' => $resp->status(),
+                'body'   => $resp->json(),
+            ]);
+        }
+
+        return $resp->successful();
     }
 
     /** Consulta o status de uma assinatura (preapproval). */

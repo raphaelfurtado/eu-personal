@@ -61,8 +61,10 @@ Route::middleware('auth')->get('/dashboard', fn () => redirect()->route('dashboa
 
 // Assinatura Pro (Mercado Pago) — autenticado, sob /painel para não colidir com /{trainer}
 Route::middleware('auth')->prefix('painel')->name('billing.')->group(function () {
-    Route::get('/assinar', [BillingController::class, 'subscribe'])->name('subscribe');
+    Route::get('/assinar', [BillingController::class, 'checkout'])->name('checkout');
+    Route::post('/assinar', [BillingController::class, 'subscribe'])->name('subscribe');
     Route::get('/assinar/retorno', [BillingController::class, 'callback'])->name('return');
+    Route::post('/assinatura/cancelar', [BillingController::class, 'cancel'])->name('cancel');
 });
 
 // Webhook do Mercado Pago (chamada externa, sem CSRF/sessão)

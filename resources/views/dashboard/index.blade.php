@@ -31,11 +31,17 @@
                 <div style="font:700 24px/1 'Oswald',sans-serif;color:#1f4733;display:flex;align-items:center;gap:8px;">{{ $trainer->plan_label }} @if($trainer->isPro())<span style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:.5px;text-transform:uppercase;color:#2f7d54;background:#e8f0ea;padding:5px 9px;border-radius:7px;">ativo</span>@endif</div>
             </div>
             @unless ($trainer->isPro())
-                <a href="{{ route('billing.subscribe') }}" style="display:inline-flex;align-items:center;gap:9px;padding:14px 26px;background:#1f4733;color:#fff;border-radius:999px;font:600 14px/1 'Oswald',sans-serif;letter-spacing:.8px;text-transform:uppercase;text-decoration:none;box-shadow:0 8px 22px rgba(31,71,51,.18);">Assinar Pro · R$39/mês <x-icon name="arrow-right" size="16" sw="2.4" /></a>
+                <a href="{{ route('billing.checkout') }}" style="display:inline-flex;align-items:center;gap:9px;padding:14px 26px;background:#1f4733;color:#fff;border-radius:999px;font:600 14px/1 'Oswald',sans-serif;letter-spacing:.8px;text-transform:uppercase;text-decoration:none;box-shadow:0 8px 22px rgba(31,71,51,.18);">Assinar Pro · R$39/mês <x-icon name="arrow-right" size="16" sw="2.4" /></a>
             @endunless
+            @if ($trainer->isPro() && $trainer->mp_preapproval_id)
+                <form method="POST" action="{{ route('billing.cancel') }}" onsubmit="return confirm('Cancelar a assinatura Pro? Você não será mais cobrado e volta para o plano Grátis agora.');">
+                    @csrf
+                    <button type="submit" style="padding:11px 18px;background:transparent;border:1.5px solid #e0ddd3;border-radius:999px;cursor:pointer;font:600 12px/1 'Oswald',sans-serif;letter-spacing:.6px;text-transform:uppercase;color:#8a5a4a;">Cancelar assinatura</button>
+                </form>
+            @endif
         </div>
         @unless ($trainer->isPro())
-            <div style="font:400 12px/1.3 'Inter',sans-serif;color:#8a9690;margin-top:10px;">💳 O botão acima abre o <strong>Mercado Pago</strong> (cartão de crédito) — é a assinatura de verdade.</div>
+            <div style="font:400 12px/1.3 'Inter',sans-serif;color:#8a9690;margin-top:10px;">💳 Pagamento seguro com cartão de crédito, processado pelo <strong>Mercado Pago</strong> — não precisa ter conta no Mercado Pago. Cancele quando quiser.</div>
         @endunless
 
         {{-- modo teste (dev): simula o plano sem cobrar — só em ambiente local --}}
