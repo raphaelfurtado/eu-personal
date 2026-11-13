@@ -63,11 +63,13 @@ php artisan test
 O deploy é feito pelo GitHub Actions a cada push na `main` ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)):
 
 1. Roda os testes. Se algum falhar, nada vai para o servidor.
-2. Instala as dependências de produção e builda os assets.
-3. Envia o Laravel por FTP para `/eu-persona` e a pasta pública para `/personalbio.websiteponto.com.br`.
-4. Chama `/_deploy/migrate`, que roda as migrations no servidor. Essa rota só responde a quem envia o `DEPLOY_TOKEN` certo.
+2. Instala as dependências de produção, builda os assets e empacota tudo em dois arquivos: `backend.zip` (o Laravel) e `webroot.zip` (a pasta pública).
+3. Envia esses dois arquivos e o instalador [deploy/_deploy.php](deploy/_deploy.php) por FTP para a pasta do domínio. São só três arquivos: mandar o `vendor` arquivo por arquivo levava mais de 40 minutos e a hospedagem acabava bloqueando a conexão.
+4. Chama o instalador, que só responde a quem envia o `DEPLOY_TOKEN` certo. Ele descompacta o backend numa pasta nova, leva o `.env` e o `storage/` da versão atual, troca as pastas, atualiza a pasta do domínio e roda as migrations. A saída das migrations aparece no log do Actions.
 
-O `index.php` da pasta do domínio é gerado no deploy e carrega o Laravel da pasta `/eu-persona`. As fotos que os personais enviam ficam em `uploads/`, dentro da pasta do domínio, e o deploy nunca mexe nelas.
+O backend fica em `/eu-persona` e a pasta pública em `/personalbio.websiteponto.com.br`. O `index.php` da pasta do domínio é gerado no deploy e carrega o Laravel de `/eu-persona`. As fotos que os personais enviam ficam em `uploads/`, dentro da pasta do domínio, e o deploy nunca mexe nelas.
+
+O servidor precisa da extensão `zip` do PHP habilitada.
 
 Secrets necessários no repositório: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD` e `DEPLOY_TOKEN`. O mesmo `DEPLOY_TOKEN` precisa estar no `.env` do servidor.
 

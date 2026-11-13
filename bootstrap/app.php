@@ -15,7 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // Webhook do Mercado Pago é uma chamada externa (sem sessão/CSRF)
         $middleware->preventRequestForgery(except: [
             'webhooks/mercadopago',
-            '_deploy/*',
         ]);
 
         // Confiar no proxy (ngrok/load balancer) p/ detectar HTTPS e host corretos

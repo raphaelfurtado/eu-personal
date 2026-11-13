@@ -127,59 +127,45 @@ jobs:
           sed -i "s/__BACKEND_DIR__/${BACKEND_DIR}/" dist-public/index.php
           cat dist-public/index.php
 
-      # ----------------------------------------------------------------
-      # PARTE 1: Envia o BACKEND (app, vendor, config...)
-      # ----------------------------------------------------------------
-      - name: 📂 Deploy Backend (App Core)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /${{ env.BACKEND_DIR }}/
-          state-name: backend-sync-state.json
-          timeout: 120000
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github/**
-            **/tests/**
-            **/node_modules/**
-            **/public/**
-            dist-public/**
-            design-source/**
-            **/storage/*.key
-            **/.env
-            **/README.md
+      # Enviar milhares de arquivos por FTP é lento e a hospedagem bloqueia.
+      # Em vez disso, tudo vai em dois .zip que o servidor descompacta.
+      - name: 📦 Package release
+        run: |
+          mkdir upload
+          zip -qr upload/backend.zip . \
+            -x '.git/*' '.github/*' 'public/*' 'tests/*' 'node_modules/*' \
+               'dist-public/*' 'upload/*' 'deploy/*' 'design-source/*' \
+               '.env' 'storage/logs/*.log'
+          (cd dist-public && zip -qr ../upload/webroot.zip . -x 'uploads/*')
+          sed "s/__BACKEND_DIR__/${BACKEND_DIR}/" deploy/_deploy.php > upload/_deploy.php
+          ls -lh upload
 
       # ----------------------------------------------------------------
-      # PARTE 2: Envia o WEBROOT (index.php, build do Vite, imagens)
+      # PARTE 1: Envia os 3 arquivos para o webroot por FTP
       # ----------------------------------------------------------------
-      - name: 📂 Deploy Webroot (Public Folder)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dist-public/
-          server-dir: /${{ env.DOCROOT_DIR }}/
-          state-name: frontend-sync-state.json
-          timeout: 120000
-          # Nunca mexer nas fotos enviadas pelos usuários
-          exclude: |
-            uploads/**
-            **/.gitkeep
+      - name: 📂 Upload release (FTP)
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for f in backend.zip webroot.zip _deploy.php; do
+            echo "Enviando $f"
+            curl -fsS --retry 3 --retry-delay 5 --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "upload/$f" "ftp://${FTP_SERVER}/${DOCROOT_DIR}/$f"
+          done
 
       # ----------------------------------------------------------------
-      # PARTE 3: Migrations + limpeza de cache (endpoint protegido)
+      # PARTE 2: Instala no servidor (descompacta, troca versão, migrations)
       # ----------------------------------------------------------------
-      - name: 🗄️ Run Database Migrations
+      - name: 🗄️ Install release + migrations
         env:
           DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
-          curl -fsS --retry 2 -X POST \
+          curl -sS --fail-with-body --max-time 600 -X POST \
             -H "X-Deploy-Token: ${DEPLOY_TOKEN}" \
-            "${SITE_URL}/_deploy/migrate"
+            "${SITE_URL}/_deploy.php"
 
       - name: ✅ Health check
         run: curl -fsS -o /dev/null -w "HTTP %{http_code}\n" "${SITE_URL}/up"

@@ -15,9 +15,6 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-    // Token que o GitHub Actions envia para rodar as migrations após o deploy
-    'deploy_token' => env('DEPLOY_TOKEN'),
-
     /*
     |--------------------------------------------------------------------------
     | Application Environment
