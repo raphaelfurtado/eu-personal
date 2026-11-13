@@ -175,14 +175,22 @@ $kernel->bootstrap();
 
 $status = $kernel->call('migrate', ['--force' => true]);
 $migrateOutput = trim($kernel->output());
-$kernel->call('optimize:clear');
 
 step($log, 'Migrations:');
-
 echo implode("\n", $log)."\n".$migrateOutput."\n";
 
 if ($status !== 0) {
     fail(500, 'As migrations falharam.');
 }
+
+// Perfis de exemplo da home (idempotente, não cria usuários)
+$seedStatus = $kernel->call('db:seed', ['--class' => 'Database\\Seeders\\ExampleProfilesSeeder', '--force' => true]);
+echo trim($kernel->output())."\n";
+
+if ($seedStatus !== 0) {
+    fail(500, 'O seed dos perfis de exemplo falhou.');
+}
+
+$kernel->call('optimize:clear');
 
 echo "Deploy concluído.\n";

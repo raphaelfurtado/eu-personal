@@ -42,7 +42,9 @@ npm run build
 php artisan serve
 ```
 
-O seed cria dois perfis de exemplo, `/marina-lacerda` e `/bruno-tavares`, que aparecem na home na seção "Veja na prática", e uma conta para entrar no painel: `demo@corpora.test` com a senha `password`. Não rode o seed em produção sem trocar essa senha.
+O seed cria dois perfis de exemplo, `/marina-lacerda` e `/bruno-tavares`, que aparecem na home na seção "Veja na prática", e uma conta para entrar no painel da Marina: `demo@corpora.test` com a senha `password`.
+
+São dois seeders separados de propósito. O [ExampleProfilesSeeder](database/seeders/ExampleProfilesSeeder.php) cria só os perfis de exemplo, sem nenhuma conta, e é o único que roda em produção (a cada deploy). O [DatabaseSeeder](database/seeders/DatabaseSeeder.php) chama ele e cria a conta demo, e serve só para desenvolvimento.
 
 Para a assinatura funcionar, configure no `.env`:
 
@@ -65,7 +67,7 @@ O deploy é feito pelo GitHub Actions a cada push na `main` ([.github/workflows/
 1. Roda os testes. Se algum falhar, nada vai para o servidor.
 2. Instala as dependências de produção, builda os assets e empacota tudo em dois arquivos: `backend.zip` (o Laravel) e `webroot.zip` (a pasta pública).
 3. Envia esses dois arquivos e o instalador [deploy/_deploy.php](deploy/_deploy.php) por FTP para a pasta do domínio. São só três arquivos: mandar o `vendor` arquivo por arquivo levava mais de 40 minutos e a hospedagem acabava bloqueando a conexão.
-4. Chama o instalador, que só responde a quem envia o `DEPLOY_TOKEN` certo. Ele descompacta o backend numa pasta nova, leva o `.env` e o `storage/` da versão atual, troca as pastas, atualiza a pasta do domínio e roda as migrations. A saída das migrations aparece no log do Actions.
+4. Chama o instalador, que só responde a quem envia o `DEPLOY_TOKEN` certo. Ele descompacta o backend numa pasta nova, leva o `.env` e o `storage/` da versão atual, troca as pastas, atualiza a pasta do domínio, roda as migrations e o `ExampleProfilesSeeder`. A saída aparece no log do Actions.
 
 O backend fica em `/eu-persona` e a pasta pública em `/personalbio.websiteponto.com.br`. O `index.php` da pasta do domínio é gerado no deploy e carrega o Laravel de `/eu-persona`. As fotos que os personais enviam ficam em `uploads/`, dentro da pasta do domínio, e o deploy nunca mexe nelas.
 
