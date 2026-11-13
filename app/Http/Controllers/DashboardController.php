@@ -28,10 +28,12 @@ class DashboardController extends Controller
 
     /**
      * Troca de plano em modo demonstração (sem cobrança).
-     * Quando a cobrança entrar, isto vira o retorno do webhook do provedor.
+     * Só existe em ambiente local: em produção o plano muda apenas pelo Mercado Pago.
      */
     public function setPlan(Request $request)
     {
+        abort_unless(app()->isLocal(), 404);
+
         $data = $request->validate([
             // Studio é sob consulta (Falar com vendas), não entra no self-service
             'plan' => ['required', 'in:free,pro'],

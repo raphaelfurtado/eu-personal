@@ -38,7 +38,8 @@
             <div style="font:400 12px/1.3 'Inter',sans-serif;color:#8a9690;margin-top:10px;">💳 O botão acima abre o <strong>Mercado Pago</strong> (cartão de crédito) — é a assinatura de verdade.</div>
         @endunless
 
-        {{-- modo teste (dev): simula o plano sem cobrar --}}
+        {{-- modo teste (dev): simula o plano sem cobrar — só em ambiente local --}}
+        @if (app()->isLocal())
         <div style="border-top:1px dashed #e0ddd3;margin-top:18px;padding-top:16px;">
             <div style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:1px;text-transform:uppercase;color:#b08900;margin-bottom:9px;">🧪 Modo teste (dev) — sem cobrança</div>
             <form method="POST" action="{{ route('dashboard.plan.set') }}" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -50,6 +51,7 @@
                 <span style="font:400 12px/1.3 'Inter',sans-serif;color:#8a9690;">Só muda o plano localmente pra testar limites/recursos. <strong>Studio</strong> é sob consulta (Falar com vendas).</span>
             </form>
         </div>
+        @endif
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
