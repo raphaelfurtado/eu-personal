@@ -63,8 +63,9 @@ function envValue(string $file, string $key): ?string
     }
 
     foreach (file($file, FILE_IGNORE_NEW_LINES) as $line) {
-        if (preg_match('/^\s*'.preg_quote($key, '/').'\s*=\s*(.*)\s*$/', $line, $m)) {
-            return trim($m[1], " \t\"'");
+        // trim() padrão também remove o \r de arquivos salvos com quebra de linha do Windows
+        if (preg_match('/^\s*'.preg_quote($key, '/').'\s*=(.*)$/', $line, $m)) {
+            return trim(trim($m[1]), "\"'");
         }
     }
 
@@ -93,7 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $token = envValue($base.'/.env', 'DEPLOY_TOKEN') ?? envValue($new.'/.env', 'DEPLOY_TOKEN') ?? '';
-$sent = $_SERVER['HTTP_X_DEPLOY_TOKEN'] ?? '';
+$sent = trim($_SERVER['HTTP_X_DEPLOY_TOKEN'] ?? '');
+
+// Só chega aqui com o header presente; aí vale explicar o que falta na configuração
+if ($sent !== '' && $token === '') {
+    fail(500, 'DEPLOY_TOKEN não encontrado em ../'.BACKEND_DIR.'/.env no servidor.');
+}
 
 if ($token === '' || ! hash_equals($token, $sent)) {
     fail(404, 'Not Found');
